@@ -70,7 +70,7 @@ export default class OAuth {
 	) {
 		let generatedState;
 		if (provider === 'Yahoo') {
-			generatedState = this._generateState(1);
+			generatedState = this._generateState(6);
 		} else {
 			generatedState = this._generateState(32);
 		}
@@ -95,7 +95,7 @@ export default class OAuth {
 				identity_provider: provider,
 				scopes: this._scopes,
 				state,
-				nonce: this._generateState(1),
+				nonce: this._generateState(6),
 				...(responseType === 'code' ? { code_challenge } : {}),
 				...(responseType === 'code' ? { code_challenge_method } : {}),
 			})
