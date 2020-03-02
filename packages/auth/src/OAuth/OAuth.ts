@@ -68,7 +68,12 @@ export default class OAuth {
 			| string = CognitoHostedUIIdentityProvider.Cognito,
 		customState?: string
 	) {
-		const generatedState = this._generateState(32);
+		let generatedState;
+		if (provider === 'Yahoo') {
+			generatedState = this._generateState(1);
+		} else {
+			generatedState = this._generateState(32);
+		}
 		const state = customState
 			? `${generatedState}-${customState}`
 			: generatedState;
@@ -81,18 +86,35 @@ export default class OAuth {
 		const code_challenge = this._generateChallenge(pkce_key);
 		const code_challenge_method = 'S256';
 
-		const queryString = Object.entries({
-			redirect_uri: redirectSignIn,
-			response_type: responseType,
-			client_id: clientId,
-			identity_provider: provider,
-			scopes: this._scopes,
-			state,
-			...(responseType === 'code' ? { code_challenge } : {}),
-			...(responseType === 'code' ? { code_challenge_method } : {}),
-		})
-			.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-			.join('&');
+		let queryString;
+		if (provider === 'Yahoo') {
+			queryString = Object.entries({
+				redirect_uri: redirectSignIn,
+				response_type: responseType,
+				client_id: clientId,
+				identity_provider: provider,
+				scopes: this._scopes,
+				state,
+				nonce: this._generateState(1),
+				...(responseType === 'code' ? { code_challenge } : {}),
+				...(responseType === 'code' ? { code_challenge_method } : {}),
+			})
+				.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+				.join('&');
+		} else {
+			queryString = Object.entries({
+				redirect_uri: redirectSignIn,
+				response_type: responseType,
+				client_id: clientId,
+				identity_provider: provider,
+				scopes: this._scopes,
+				state,
+				...(responseType === 'code' ? { code_challenge } : {}),
+				...(responseType === 'code' ? { code_challenge_method } : {}),
+			})
+				.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+				.join('&');
+		}
 
 		const URL = `https://${domain}/oauth2/authorize?${queryString}`;
 		logger.debug(`Redirecting to ${URL}`);
